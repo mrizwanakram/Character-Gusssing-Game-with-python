@@ -1,323 +1,96 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[169]:
-
-
-#step# 1:
-#import laibearies
 import sys
-import json
 import random
-import time
-import numpy as np
-import pandas as pd
-from termcolor import colored
-colored()
 
+# Step 1: Function to load words from the text file
+def load_words(file_path):
+    try:
+        with open(file_path, "r") as file:
+            # Read lines, strip newlines, and create a list
+            words = [line.strip() for line in file if line.strip()]
+        return words
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error loading file: {e}")
+        sys.exit(1)
 
-# In[170]:
+# Step 2: Filter the words between 4 and 12 characters
+def filter_words(words):
+    return [word for word in words if 4 <= len(word) <= 12]
 
-
-df = pd.read_csv('scrabble.json')
-#print(df)
-
-
-# In[171]:
-
-
-df.shape
-
-
-# In[172]:
-
-
-#To store numbers in list name deco from 4 to 12
-dico = []
-list1 = df['aa'].to_list()
-
-
-# In[173]:
-
-
-list1
-
-
-# In[174]:
-
-
-for i in list1:
-    #print(i)
-    if len(i) > 4 and len(i) <= 12:
-        #print(i)
-        dico.append(i)
-        #print(i,len(i)) #to show length of every number in output
-
-
-# In[175]:
-
-dico
-
-# In[176]:
-
-
-len(dico)
-
-
-# In[177]:
-
-
-def get_word():
-    json_file ==  dico   
-    text = json_file.read()   
-    text = text.split()
-    num_words = len(text)
-    return text[random.randint(0, num_words)]
-
-
-# In[178]:
-
-
-def random_word(dico,l): #  Updates displayed word containing correct indices
-    w = ""
-    for i in range(len(dico)):  
-        if i in l:    
-            w += dico[i]
-        else:
-            w += "-"
-    return w
-
-
-# In[179]:
-
-
-def inside(lst, w):   
-    indices_correct = []
-    if len(lst) != len(w):
-        print("That's word not equall to gussed letter word.")
-        return indices_correct
-    else:
-        for letter in range(len(w)):
-            if lst[letter] in w[0:] and lst[letter] == w[letter]:
-                print(f"\033[38;5;196m{lst[letter]} \033[0mis in the right spot!")
-                indices_correct.append(letter)
-            elif lst[letter] in w[1:]:
-                print(f"\033[38;5;226m{lst[letter]} \033[0mis a correct letter, but in the wrong spot!")
-
-            else:
-                print(f"{lst[letter]} is incorrect!")
-    return indices_correct
-
-
-
-
-
-
-
-
-# In[180]:
-
-
+# Step 3: Function to display guesses
 def display_guesses(guesses):
-    for lst in range(1, len(guesses)):
-        print(f"Guess {lst}: ", end=" ")
-        display_word(guesses[lst])
-        print()
+    for index, guess in enumerate(guesses, start=1):
+        print(f"Guess {index}: {guess}")
 
-
-# In[181]:
-
-
-def display_word(w):
-    for letter in range(len(w)):
-        print(f"\t{w[letter]}", end="\t")
-
-
-# In[182]:
-
-
-def partie(): 
-    nums_found = False
-    num_list = []
-    x2 = []
-    total_count = 0
-    while not nums_found:
-        if total_count == 25:
-            nums_found = True
+# Step 4: Function to handle checking guesses
+def check_guess(word, guess):
+    feedback = []
+    for i, letter in enumerate(guess):
+        if i < len(word) and letter == word[i]:
+            feedback.append(f"\033[92m{letter}\033[0m")  # Green for correct position
+        elif letter in word:
+            feedback.append(f"\033[93m{letter}\033[0m")  # Yellow for correct letter
         else:
-            num = random.randint(0, 100)
-            if num not in num_list:
-                num_list.append(num)
-                total_count += 1
-    for i in range(total_count):
-        if not i % 5:
-            x2.append([])
-            x2[i // 5].append(num_list[i])
+            feedback.append(f"\033[91m{letter}\033[0m")  # Red for incorrect
+    return "".join(feedback)
+
+# Step 5: Main game loop
+def play_game(dico):
+    word_to_guess = random.choice(dico)
+    attempts = 10
+    guesses = []
+
+    print("\nWelcome to the Word Guessing Game!")
+    print(f"The goal is to guess the word within {attempts} tries.\n")
+
+    while attempts > 0:
+        guess = input(f"Enter your guess ({len(word_to_guess)} letters): ").strip().lower()
+
+        if len(guess) != len(word_to_guess):
+            print(f"Please enter a word of length {len(word_to_guess)}.")
+            continue
+
+        feedback = check_guess(word_to_guess, guess)
+        guesses.append(feedback)
+        display_guesses(guesses)
+
+        if guess == word_to_guess:
+            print(f"\nCongratulations! You guessed the word: {word_to_guess}\n")
+            return
         else:
-            x2[i//5].append(num_list[i])
-    return x2
+            attempts -= 1
+            print(f"\nAttempts left: {attempts}\n")
 
+    print(f"Game over! The correct word was: {word_to_guess}\n")
 
-# In[183]:
-
-
-def get_word():
-    w_file = open("scrabble.json", "r")
-    text = w_file.read()   #word_file = json_file
-    text = text.split()
-    num_words = len(text)
-    return text[random.randint(0, num_words)]
-
-
-# In[ ]:
-
-
-
-
-
-# In[184]:
-
-
-def initialize_players():
-    num_players = int(input("How many players will there be? "))
-    players = []
-    for player in range(num_players):
-        players.append(input(f"Please give a nickname for player {player + 1}: "))
-    return players
-
-
-# In[185]:
-
-
-def show_scoreboard(players, scores):
-    print("Current Standings:")
-    for i in range(len(players)):
-        print(f"{players[i]}: {scores[i]}")
-    print()
-
-
-# In[186]:
-
-
-def initialize_scores(players):
-    scores = []
-    for i in range(len(players)):
-        scores.append(0)
-    return scores
-
-
-# In[187]:
-
-
-def checks_random(dico, lst, x):      
-    if lst == dico:
-        print(f"Congratulations, you've won! The word was: {dico}.")
-        #input("Press enter to continue...")
-
-        return 1
-
-    elif x == 10:
-        print(f"I'm sorry, you lost. The word was: {dico}.")
-        #input("Press enter to continue... ")
-        
-        return 0
-    else:
-        return 0
-        
-
-
-# In[188]:
-
-
-def partNaive(x2):
-    for i in range(len(x2)):    
-        for j in range(len(x2)):
-            print(x2[i][j], end="\t")
-        print()
-
-
-# In[190]:
-
-
-def play_game():  
-
-    x2 = partie()
-    players = initialize_players()
-    scoreboard = initialize_scores(players)
-    player_up = 0
-    winning_score = 1
-
-    while True:
-        w = get_word()
-        print(w)
-        show_scoreboard(players, scoreboard)
-        print(f"Okay {players[player_up]}, it's your turn!")
-        guess_allowance = 10
-        x = 0
-        guess_so_far = w[0:1] + "---------"
-        tot_indices_correct = [0, 1]
-        guesses = [w, guess_so_far]
-
-        for i in range(guess_allowance):
-            display_guesses(guesses)
-            lst = input("\nHere's your word. Make a guess! ").lower()
-            guesses[i+1] = lst
-            cur_indices_correct = inside(lst, w)
-            tot_indices_correct.extend(cur_indices_correct)
-            guesses.append(random_word(w, tot_indices_correct))
-            x += 1
-            if checks_random(w, guesses[i+1], x):
-                scoreboard[player_up] += 1
-                break
-
-        if winning_score in scoreboard:
-            print(f"Congratulations, {players[scoreboard.index(winning_score)]}, you've won!")
-            break
-
-        elif winning_score not in scoreboard:
-            break
-
-        else:
-            player_up += 1
-            if player_up == len(players):
-                player_up = 0
-        
-
+# Main function
 def main():
-    print(f"Welcome to Lingo.py. The object of this game is to guess a 5-letter word in 5 tries.")
-    print(f"After each guess, you are told which letters are in the correct position, which aren't, and which are just wrong.")
-    play_game()
+    file_path = "scrabble.json"  # Update this to your file name if needed
+    print("Loading words...")
+    words = load_words(file_path)
+    filtered_words = filter_words(words)
+
+    if not filtered_words:
+        print("No words available in the specified range (4 to 12 characters).")
+        sys.exit(1)
+
+    play_game(filtered_words)
 
     while True:
-        quit = input("\nPress \033[38;5;196mQ\033[0m for Quit the Game\nPress \033[38;5;226mC\033[0m for Quit the Game").lower()
-        if quit == "c":
-            play_game()
-
-        elif quit=="q":
+        choice = input("Do you want to play again? (y/n): ").strip().lower()
+        if choice == "y":
+            play_game(filtered_words)
+        elif choice == "n":
+            print("Thanks for playing! Goodbye!")
             break
+        else:
+            print("Invalid input. Please enter 'y' or 'n'.")
 
-        elif quit != "q" or quit != "c":
-            print("\033[38;5;196mWrong Input !\033[0m")
-
-main()
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
+# Run the game
+if __name__ == "__main__":
+    main()
